@@ -2,9 +2,15 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+enum {
+    MATCH = -1,
+    BRANCH = -2,
+};
+
 typedef struct State {
     int c;
     struct State *next;
+    struct State *next_2;
 } State;
 
 
@@ -16,7 +22,25 @@ typedef struct Machine {
 } Machine;
 
 
-State MATCH_STATE = {-1, NULL};
+/*
+ * Sentinel to represent the final state 
+ */
+State MATCH_STATE = {MATCH, NULL, NULL};
+
+
+/*
+ * This function must be used for every insert operation in the 
+ * two vectors of the machine. Indeed, it guarantees that the
+ * machine'll never be in a BRANCH state.
+ */
+void push(State **state_list, size_t *list_p, State *s) {
+    if (s->c == BRANCH) {
+        push(state_list, list_p, s->next);
+        push(state_list, list_p, s->next_2);
+    } else {
+        state_list[(*list_p)++] = s;
+    }
+}
 
 
 void machine_init(Machine *machine, size_t n_states, State *start) {
@@ -26,7 +50,7 @@ void machine_init(Machine *machine, size_t n_states, State *start) {
     machine->next = malloc(sizeof(State *) * n_states);
     machine->next_p = 0;
 
-    machine->current[machine->cur_p++] = start;
+    push(machine->current, &(machine->cur_p), start);
 }
 
 
@@ -43,8 +67,13 @@ bool machine_broken(Machine *machine) {
 void machine_step(Machine *machine, int c) {
     for (size_t i = 0; i < machine->cur_p; i++) {
         State *state = machine->current[i];
+
+        /*
+         * The machine is guaranteed not to be in a 
+         * SPLIT state so we don't need to check.
+         */
         if (c == state->c) {
-            machine->next[machine->next_p++] = state->next;
+            push(machine->next, &(machine->next_p), state->next);
         }
     }
 
