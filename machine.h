@@ -30,6 +30,11 @@ void machine_init(Machine *machine, size_t n_states, State *start) {
 }
 
 
+/*
+ * The machine is considered "broken" when there's no
+ * current state. It shall happen after a step where no 
+ * match occurred.
+ */
 bool machine_broken(Machine *machine) {
     return machine->cur_p == 0;
 }
