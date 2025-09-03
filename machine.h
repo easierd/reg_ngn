@@ -59,12 +59,12 @@ void machine_init(Machine *machine, size_t n_states, State *start) {
  * current state. It shall happen after a step where no 
  * match occurred.
  */
-bool machine_broken(Machine *machine) {
+bool is_broken(Machine *machine) {
     return machine->cur_p == 0;
 }
 
 
-void machine_step(Machine *machine, int c) {
+void step(Machine *machine, int c) {
     for (size_t i = 0; i < machine->cur_p; i++) {
         State *state = machine->current[i];
 
@@ -91,7 +91,7 @@ void machine_step(Machine *machine, int c) {
 
 
 
-bool machine_has_match(Machine *machine) {
+bool has_match(Machine *machine) {
     for (size_t i = 0; i < machine->cur_p; i++) {
         if (machine->current[i] == &MATCH_STATE) {
             return true;
@@ -100,6 +100,21 @@ bool machine_has_match(Machine *machine) {
 
     return false;
 }
+
+
+bool machine_match(Machine *machine, char *string) {
+    for (;*string; string++) {
+        step(machine, *string);
+        if (is_broken(machine)) {
+            return false;
+        }
+    }
+    if (has_match(machine)) {
+            return true;
+    }
+    return false;
+}
+
 
 
 void machine_free(Machine *m) {

@@ -5,20 +5,6 @@
 #include "machine.h"
 
 
-bool match(Machine *machine, char *string) {
-    for (;*string; string++) {
-        machine_step(machine, *string);
-        if (machine_broken(machine)) {
-            return false;
-        }
-    }
-    if (machine_has_match(machine)) {
-            return true;
-    }
-    return false;
-}
-
-
 int main(int argc, char *argv[]) {
 
     if (argc != 2) {
@@ -26,21 +12,27 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    State branch = {BRANCH, NULL, NULL};
+    State branch_a_b = {BRANCH, NULL, NULL};
+    State branch_ab_c = {BRANCH, NULL, NULL};
+
     State a = {'a', NULL, NULL};
     State b = {'b', NULL, NULL};
+    State c = {'c', NULL, NULL};
 
-    branch.next = &a;
-    branch.next_2 = &b;
+    branch_a_b.next = &a;
+    branch_a_b.next_2 = &b;
+
+    branch_ab_c.next = &branch_a_b;
+    branch_ab_c.next_2 = &c;
 
     a.next = &MATCH_STATE;
-
     b.next = &MATCH_STATE;
+    c.next = &MATCH_STATE;
 
     Machine m;
-    machine_init(&m, 4, &branch);
+    machine_init(&m, 4, &branch_ab_c);
 
-    if (match(&m, *++argv)) {
+    if (machine_match(&m, *++argv)) {
         printf("%s\n", *argv);
     }
 
