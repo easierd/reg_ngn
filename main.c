@@ -6,19 +6,18 @@
 
 
 bool match(Machine *machine, char *string) {
-    State *state = machine->state;
     while (*string) {
-        if (*string == state->c) {
-           state = state->next; 
-        } else {
+        machine_step(machine, *string);
+
+        if (machine_broken(machine)) {
             return false;
         }
 
         string++;
     }
 
-    if (state == &MATCH_STATE) {
-        return true;
+    if (machine_has_match(machine)) {
+            return true;
     }
 
     return false;
@@ -36,11 +35,14 @@ int main(int argc, char *argv[]) {
     State b = {'b', NULL};
     a.next = &b;
     b.next = &MATCH_STATE;
-    Machine m = {&a};
+    Machine m;
+    machine_init(&m, 2, &a);
 
     if (match(&m, *++argv)) {
         printf("%s\n", *argv);
     }
+
+    machine_free(&m);
 
     return EXIT_SUCCESS;
 }
