@@ -15,6 +15,7 @@ typedef struct State {
 
 
 typedef struct Machine {
+    State *start;
     State **current;
     size_t cur_p;
     State **next;

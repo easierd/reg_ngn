@@ -13,6 +13,7 @@ void step(Machine *machine, int c);
 
 
 void machine_init(Machine *machine, size_t n_states, State *start) {
+    machine->start = start;
     machine->current = malloc(sizeof(State *) * n_states);
     machine->cur_p = 0;
 
@@ -39,8 +40,8 @@ bool machine_match(Machine *machine, char *string) {
 
 
 void machine_free(Machine *m) {
-    free(m->current);
     free(m->next);
+    free(m->current);
 }
 
 
