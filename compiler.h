@@ -38,6 +38,9 @@ void patch(StateList *out, State *in) {
 }
 
 
+Fragment alternation();
+
+
 StateList *append(StateList *l1, StateList *l2) {
     StateList *cur = l1;
     while (cur->next) {
@@ -53,6 +56,12 @@ char *pattern;
 
 
 Fragment primary() {
+    if (*pattern == '(') {
+        pattern ++;
+        Fragment grouping = alternation();
+        pattern ++;
+        return grouping;
+    }
     State *s = malloc(sizeof(State));
     if (s == NULL) {
         perror("primary");
@@ -69,7 +78,7 @@ Fragment primary() {
 
 Fragment concat() {
     Fragment head = primary();
-    if (*pattern && *pattern != '|') {
+    if (*pattern && *pattern != '|' && *pattern != ')') {
         Fragment tail = concat();
         patch(head.out, tail.in);
         head.out = tail.out;
