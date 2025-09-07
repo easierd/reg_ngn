@@ -13,11 +13,9 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    Machine *m = compile_pattern(*++argv);
-    if (m==NULL) {
-        return EXIT_FAILURE;
-    }
-    if (machine_match(m, *++argv)){
+    Machine m = compile_pattern(*++argv);
+
+    if (machine_match(&m, *++argv)){
         printf("%s\n", *argv);
     }
 
@@ -29,7 +27,7 @@ int main(int argc, char *argv[]) {
      * the machine can contain loops (I shall study 
      * some technique for directed graphs)
      */
-    machine_free(m);
+    machine_free(&m);
 
     return EXIT_SUCCESS;
 }
