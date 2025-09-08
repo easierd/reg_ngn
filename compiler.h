@@ -52,6 +52,7 @@ StateList *append(StateList *l1, StateList *l2) {
 
 
 char *pattern;
+long states = 0;
 
 
 Fragment primary() {
@@ -62,25 +63,53 @@ Fragment primary() {
         return grouping;
     }
     State *s = malloc(sizeof(State));
+    states++;
     if (s == NULL) {
         perror("primary");
         exit(1);
     }
 
-    s->c = *pattern++;
+    s->c = *pattern;
     s->next = NULL;
     s->next_2 = NULL;
+
+    if (*pattern) {
+        pattern++;
+    }
 
     return fragment(s, list(&(s->next)));
 }
 
+Fragment kleene() {
+    Fragment left = primary();
+    if (*pattern == '*') {
+        pattern++;
+        State *s = malloc(sizeof(State));
+        states++;
+        if (!s) {
+            perror("kleene");
+            exit(EXIT_FAILURE);
+        }
+
+        s->c = BRANCH;
+        s->next = left.in;
+        s->next_2 = NULL;
+
+        patch(left.out, s);
+        left.in = s;
+        left.out = list(&(s->next_2));
+    }
+
+    return left;
+}
+
 
 Fragment optionality() {
-    Fragment left = primary();
+    Fragment left = kleene();
     if (*pattern == '?') {
-        pattern ++;
-
+        pattern++;
         State *s = malloc(sizeof(State));
+        states++;
         if (!s) {
             perror("optionality");
             exit(EXIT_FAILURE);
@@ -140,7 +169,7 @@ Machine compile_pattern(char *s) {
     patch(f.out, &MATCH_STATE);
 
     Machine m;
-    machine_init(&m, 2, f.in);
+    machine_init(&m, states, f.in);
 
     return m;
 }
