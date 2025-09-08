@@ -16,7 +16,6 @@ StateList* list(State **out) {
 }
 
 
-
 typedef struct Fragment {
     State *in;
     StateList *out;
@@ -76,13 +75,37 @@ Fragment primary() {
 }
 
 
+Fragment optionality() {
+    Fragment left = primary();
+    if (*pattern == '?') {
+        pattern ++;
+
+        State *s = malloc(sizeof(State));
+        if (!s) {
+            perror("optionality");
+            exit(EXIT_FAILURE);
+        }
+        s->c = BRANCH;
+        s->next = left.in;
+        s->next_2 = NULL;
+        
+        left.in = s;
+        left.out = append(left.out, list(&(s->next_2)));
+    }
+
+    return left;
+}
+
+
 Fragment concat() {
-    Fragment head = primary();
+    Fragment head = optionality();
+
     if (*pattern && *pattern != '|' && *pattern != ')') {
         Fragment tail = concat();
         patch(head.out, tail.in);
         head.out = tail.out;
     }
+
     return head;
 }
 
@@ -109,7 +132,6 @@ Fragment alternation() {
 
     return left;
 }
-
 
 
 Machine compile_pattern(char *s) {
