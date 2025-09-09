@@ -4,7 +4,8 @@
 #include "machine.h"
 
 
-State MATCH_STATE = {MATCH, NULL, NULL};
+State MATCH_STATE = {MATCH, &MATCH_STATE, NULL};
+
 
 void push(State **state_list, size_t *list_p, State *s);
 bool is_broken(Machine *machine);
