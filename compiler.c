@@ -6,6 +6,15 @@
 #include "machine.h"
 
 
+void concat_last_two(FragStack *s) {
+    Fragment f1 = stack_pop(s);
+    Fragment f2 = stack_pop(s);
+    patch(f2.out, f1.in);
+    f2.out = f1.out;
+    stack_push(s, f2);
+}
+
+
 static State *compile(char *s, long *states) {
     // match state is always present
     *states = 1;
@@ -18,8 +27,6 @@ static State *compile(char *s, long *states) {
     stack_init(&stack);
 
     int primaries = 0;
-    Fragment f1;
-    Fragment f2;
 
     for (; *s; s++) {
         switch(*s) {
@@ -33,19 +40,15 @@ static State *compile(char *s, long *states) {
             default:
                 if (primaries > 1) {
                     primaries--;
-                    f1 = stack_pop(&stack);
-                    f2 = stack_pop(&stack);
-                    patch(f2.out, f1.in);
-                    f2.out = f1.out;
-                    stack_push(&stack, f2);
+                    concat_last_two(&stack);
                 }
                 primaries++;
 
-                State *state = malloc(sizeof(State));
-                state->c = *s;
-                state->next = NULL;
-                state->next_2 = NULL;
-
+                State *state = state_new(*s, NULL, NULL);
+                if (!state) {
+                    perror("compile");
+                    exit(EXIT_FAILURE);
+                }
                 states++;
 
                 Fragment f = fragment(state, list(&(state->next)));
@@ -56,11 +59,7 @@ static State *compile(char *s, long *states) {
     }
 
     while(--primaries > 0) {
-        f1 = stack_pop(&stack);
-        f2 = stack_pop(&stack);
-        patch(f2.out, f1.in);
-        f2.out = f1.out;
-        stack_push(&stack, f2);
+        concat_last_two(&stack);
     }
 
     Fragment last = stack_pop(&stack);

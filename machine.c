@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "machine.h"
@@ -11,6 +12,21 @@ void push(State **state_list, size_t *list_p, State *s);
 bool is_broken(Machine *machine);
 bool has_match(Machine *machine);
 void step(Machine *machine, int c);
+
+
+State *state_new(int c, State *next, State *next_2) {
+    State *s = malloc(sizeof(State));
+    if (!s) {
+        perror("state_new");
+        exit(EXIT_FAILURE);
+    }
+
+    s->c = c;
+    s->next = next;
+    s->next_2 = next_2;
+
+    return s;
+}
 
 
 void machine_init(Machine *machine, size_t n_states, State *start) {

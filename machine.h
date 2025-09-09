@@ -29,10 +29,8 @@ typedef struct Machine {
 extern State MATCH_STATE;
 
 
+State *state_new(int, State*, State*);
+
 void machine_init(Machine *machine, size_t n_states, State *start);
-
-
 bool machine_match(Machine *machine, char *string);
-
-
 void machine_free(Machine *m);
