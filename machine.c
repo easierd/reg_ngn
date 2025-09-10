@@ -5,10 +5,10 @@
 #include "machine.h"
 
 
-State MATCH_STATE = {MATCH, &MATCH_STATE, NULL};
+State MATCH_STATE = {MATCH, &MATCH_STATE, NULL, 0};
 
 
-void push(State **state_list, size_t *list_p, State *s);
+void push(State **state_list, size_t *list_p, State *s, int iter);
 bool is_broken(Machine *machine);
 bool has_match(Machine *machine);
 void step(Machine *machine, int c);
@@ -24,6 +24,7 @@ State *state_new(int c, State *next, State *next_2) {
     s->c = c;
     s->next = next;
     s->next_2 = next_2;
+    s->last_iter = 0;
 
     return s;
 }
@@ -37,7 +38,8 @@ void machine_init(Machine *machine, size_t n_states, State *start) {
     machine->next = malloc(sizeof(State *) * n_states);
     machine->next_p = 0;
 
-    push(machine->current, &(machine->cur_p), start);
+    machine->iter = 1;
+    push(machine->current, &(machine->cur_p), start, machine->iter);
 }
 
 
@@ -70,10 +72,14 @@ void machine_free(Machine *m) {
  * two vectors of the machine. Indeed, it guarantees that the
  * machine'll never be in a BRANCH state.
  */
-void push(State **state_list, size_t *list_p, State *s) {
+void push(State **state_list, size_t *list_p, State *s, int iter) {
+    if (s->last_iter == iter) {
+        return;
+    }
+    s->last_iter = iter;
     if (s->c == BRANCH) {
-        push(state_list, list_p, s->next);
-        push(state_list, list_p, s->next_2);
+        push(state_list, list_p, s->next, iter);
+        push(state_list, list_p, s->next_2, iter);
     } else {
         state_list[(*list_p)++] = s;
     }
@@ -109,8 +115,9 @@ void step(Machine *machine, int c) {
          * The machine is guaranteed not to be in a 
          * SPLIT state so we don't need to check.
          */
+        machine->iter++;
         if (c == state->c) {
-            push(machine->next, &(machine->next_p), state->next);
+            push(machine->next, &(machine->next_p), state->next, machine->iter);
         }
     }
 

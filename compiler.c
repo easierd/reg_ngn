@@ -68,7 +68,7 @@ static State *compile(char *s, long *states) {
                     perror("compile");
                     exit(EXIT_FAILURE);
                 }
-                states++;
+                (*states)++;
 
                 Fragment f = fragment(state, list(&(state->next)));
                 stack_push(&stack, f);

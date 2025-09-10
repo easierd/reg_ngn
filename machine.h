@@ -11,6 +11,7 @@ typedef struct State {
     int c;
     struct State *next;
     struct State *next_2;
+    int last_iter;
 } State;
 
 
@@ -20,6 +21,7 @@ typedef struct Machine {
     size_t cur_p;
     State **next;
     size_t next_p;
+    int iter;
 } Machine;
 
 
