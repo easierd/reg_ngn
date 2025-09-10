@@ -26,6 +26,15 @@ void alternate_last_two(FragStack *s) {
 }
 
 
+void optional_last(FragStack *s) {
+    Fragment f = stack_pop(s);
+    State *branch = state_new(BRANCH, f.in, NULL);
+    f.out = append(f.out, list(&(branch->next_2)));
+    f.in = branch;
+    stack_push(s, f);
+}
+
+
 static State *compile(char *s, long *states) {
     // match state is always present
     *states = 1;
@@ -45,8 +54,7 @@ static State *compile(char *s, long *states) {
             case '(':
             case ')':
             case '*':
-            case '+':
-            case '?':
+            case'+':
                 break;
             default:
                 if (primaries > 1) {
@@ -73,6 +81,12 @@ static State *compile(char *s, long *states) {
                 }
                 alternations++;
 
+                break;
+            case '?':
+                if (primaries == 0) {
+                    return NULL;
+                } 
+                optional_last(&stack); 
                 break;
         }
     }
