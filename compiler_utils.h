@@ -23,11 +23,22 @@ typedef struct Fragment {
 } Fragment;
 
 
+typedef struct Grouping {
+    int primaries;
+    int alternations;
+} Grouping;
+
+
+typedef struct GroupStack {
+    Grouping stack[STACK_SZ];
+    int k;
+} GroupStack;
+
+
 typedef struct FragStack {
     Fragment stack[STACK_SZ];
     int stack_p;
 } FragStack;
-
 
 
 inline StateList* list(State **out) {
@@ -60,23 +71,43 @@ inline void patch(StateList *out, State *in) {
 }
 
 
-inline void stack_init(FragStack *s) {
+inline void frag_stack_init(FragStack *s) {
     s->stack_p = 0;
 }
 
 
-inline Fragment stack_pop(FragStack *s) {
+inline Fragment frag_stack_pop(FragStack *s) {
     return s->stack[--(s->stack_p)];
 }
 
 
-inline void stack_push(FragStack *s, Fragment f) {
+inline void frag_stack_push(FragStack *s, Fragment f) {
     s->stack[(s->stack_p)++] = f;
 }
 
 
-inline bool stack_empty(FragStack *s) {
+inline bool frag_stack_empty(FragStack *s) {
     return s->stack_p == 0;
+}
+
+
+inline void group_stack_init(GroupStack *s) {
+    s->k = 0;
+}
+
+
+inline Grouping group_stack_pop(GroupStack *s) {
+    return s->stack[--(s->k)];
+}
+
+
+inline void group_stack_push(GroupStack *s, Grouping g) {
+    s->stack[(s->k)++] = g;
+}
+
+
+inline bool group_stack_empty(GroupStack *s) {
+    return s->k == 0;
 }
 
 
@@ -84,7 +115,13 @@ StateList* list(State**);
 Fragment fragment(State*, StateList*);
 StateList *append(StateList*, StateList*);
 void patch(StateList*, State*);
-void stack_init(FragStack*);
-Fragment stack_pop(FragStack*);
-void stack_push(FragStack*, Fragment);
-bool stack_empty(FragStack*);
+
+void frag_stack_init(FragStack*);
+Fragment frag_stack_pop(FragStack*);
+void frag_stack_push(FragStack*, Fragment);
+bool frag_stack_empty(FragStack*);
+
+void group_stack_init(GroupStack*);
+Grouping group_stack_pop(GroupStack*);
+void group_stack_push(GroupStack*, Grouping);
+bool group_stack_empty(GroupStack*);
