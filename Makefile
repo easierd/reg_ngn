@@ -1,5 +1,6 @@
 .PHONY: clean
 CC = gcc
+#CC_OPTIONS = -Wall -Wextra -fsanitize=address
 CC_OPTIONS = -Wall -Wextra
 CC_DEBUG_OPTIONS = -Wall -Wextra -g
 

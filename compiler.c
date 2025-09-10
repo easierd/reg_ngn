@@ -80,6 +80,7 @@ static State *compile(char *s, long *states) {
                 g.primaries = 0;
                 g.alternations = 0;
                 break;
+
             case ')':
                 if (group_stack_empty(&gstack) || g.primaries == 0) {
                     return NULL;
@@ -93,6 +94,35 @@ static State *compile(char *s, long *states) {
                 g = group_stack_pop(&gstack);
                 g.primaries++;
                 break;
+
+            case '|':
+                while (--g.primaries > 0) {
+                    concat_last_two(&stack);
+                }
+                g.alternations++;
+                break;
+
+            case '?':
+                if (g.primaries == 0) {
+                    return NULL;
+                } 
+                optional_last(&stack); 
+                break;
+
+            case '*':
+                if (g.primaries == 0) {
+                    return NULL;
+                }
+                kleene_last(&stack);
+                break;
+
+            case '+':
+                if (g.primaries == 0) {
+                    return NULL;
+                }
+                one_or_more_last(&stack);
+                break;
+
             default:
                 if (g.primaries > 1) {
                     g.primaries--;
@@ -100,7 +130,8 @@ static State *compile(char *s, long *states) {
                 }
                 g.primaries++;
 
-                State *state = state_new(*s, NULL, NULL);
+                State *state = (*s == '.') ? state_new(ANY, NULL, NULL) : 
+                                           state_new(*s, NULL, NULL);
                 if (!state) {
                     perror("compile");
                     exit(EXIT_FAILURE);
@@ -109,33 +140,6 @@ static State *compile(char *s, long *states) {
 
                 Fragment f = fragment(state, list(&(state->next)));
                 frag_stack_push(&stack, f);
-
-                break;
-
-            case '|':
-                while (--g.primaries > 0) {
-                    concat_last_two(&stack);
-                }
-                g.alternations++;
-
-                break;
-            case '?':
-                if (g.primaries == 0) {
-                    return NULL;
-                } 
-                optional_last(&stack); 
-                break;
-            case '*':
-                if (g.primaries == 0) {
-                    return NULL;
-                }
-                kleene_last(&stack);
-                break;
-            case '+':
-                if (g.primaries == 0) {
-                    return NULL;
-                }
-                one_or_more_last(&stack);
                 break;
         }
     }

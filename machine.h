@@ -5,6 +5,7 @@
 enum {
     MATCH = -1,
     BRANCH = -2,
+    ANY = -3,
 };
 
 typedef struct State {

@@ -108,6 +108,7 @@ bool has_match(Machine *machine) {
 
 
 void step(Machine *machine, int c) {
+    machine->iter++;
     for (size_t i = 0; i < machine->cur_p; i++) {
         State *state = machine->current[i];
 
@@ -115,8 +116,7 @@ void step(Machine *machine, int c) {
          * The machine is guaranteed not to be in a 
          * SPLIT state so we don't need to check.
          */
-        machine->iter++;
-        if (c == state->c) {
+        if (c == state->c || state->c == ANY) {
             push(machine->next, &(machine->next_p), state->next, machine->iter);
         }
     }
