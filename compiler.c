@@ -15,6 +15,17 @@ void concat_last_two(FragStack *s) {
 }
 
 
+void alternate_last_two(FragStack *s) {
+    Fragment f1 = stack_pop(s);
+    Fragment f2 = stack_pop(s);
+
+    State *branch = state_new(BRANCH, f1.in, f2.in);
+    f2.out = append(f1.out, f2.out);
+    f2.in = branch;
+    stack_push(s, f2);
+}
+
+
 static State *compile(char *s, long *states) {
     // match state is always present
     *states = 1;
@@ -27,12 +38,12 @@ static State *compile(char *s, long *states) {
     stack_init(&stack);
 
     int primaries = 0;
+    int alternations = 0;
 
     for (; *s; s++) {
         switch(*s) {
             case '(':
             case ')':
-            case '|':
             case '*':
             case '+':
             case '?':
@@ -55,11 +66,23 @@ static State *compile(char *s, long *states) {
                 stack_push(&stack, f);
 
                 break;
+
+            case '|':
+                while (--primaries > 0) {
+                    concat_last_two(&stack);
+                }
+                alternations++;
+
+                break;
         }
     }
 
     while(--primaries > 0) {
         concat_last_two(&stack);
+    }
+
+    while (alternations-- > 0) {
+        alternate_last_two(&stack);
     }
 
     Fragment last = stack_pop(&stack);
