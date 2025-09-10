@@ -45,6 +45,15 @@ void kleene_last(FragStack *s) {
 }
 
 
+void one_or_more_last(FragStack *s) {
+    Fragment f = stack_pop(s);
+    State *branch = state_new(BRANCH, f.in, NULL);
+    patch(f.out, branch);
+    f.out = list(&branch->next_2);
+    stack_push(s,f);
+}
+
+
 static State *compile(char *s, long *states) {
     // match state is always present
     *states = 1;
@@ -63,7 +72,6 @@ static State *compile(char *s, long *states) {
         switch(*s) {
             case '(':
             case ')':
-            case'+':
                 break;
             default:
                 if (primaries > 1) {
@@ -102,6 +110,12 @@ static State *compile(char *s, long *states) {
                     return NULL;
                 }
                 kleene_last(&stack);
+                break;
+            case '+':
+                if (primaries == 0) {
+                    return NULL;
+                }
+                one_or_more_last(&stack);
                 break;
         }
     }
