@@ -30,13 +30,58 @@ State *state_new(int c, State *next, State *next_2) {
 }
 
 
-void machine_init(Machine *machine, size_t n_states, State *start) {
+StateVector *sv_new() {
+    StateVector *sv = malloc(sizeof(StateVector));
+    if (sv == NULL) {
+        perror("sv_new");
+        exit(EXIT_FAILURE);
+    }
+    sv->state = malloc(sizeof(State*) * SV_DEF_CAPACITY);    
+    if (sv->state == NULL) {
+        free(sv);
+        perror("sv_new");
+        exit(EXIT_FAILURE);
+    }
+    sv->capacity = SV_DEF_CAPACITY;
+    sv->sz = 0;
+
+    return sv;
+}
+
+
+void sv_push(StateVector *sv, State *s) {
+    if (sv->capacity == sv->sz) {
+        sv->state = realloc(sv->state, sv->capacity * 2);
+        sv->capacity *= 2;
+    }
+
+    sv->state[(sv->sz)++] = s;
+}
+
+
+size_t sv_len(StateVector *sv) {
+    return sv->sz;
+}
+
+
+void sv_free(StateVector *sv) {
+    while((sv->sz)-- > 0) {
+        free(sv->state[sv->sz]);
+    }
+    free(sv->state);
+    free(sv);
+}
+
+
+void machine_init(Machine *machine, StateVector *sv, State *start) {
     machine->start = start;
-    machine->current = malloc(sizeof(State *) * n_states);
+    machine->current = malloc(sizeof(State *) * (sv_len(sv) + 1));
     machine->cur_p = 0;
 
-    machine->next = malloc(sizeof(State *) * n_states);
+    machine->next = malloc(sizeof(State *) * (sv_len(sv) + 1));
     machine->next_p = 0;
+
+    machine->sv = sv;
 
     machine->iter = 1;
     push(machine->current, &(machine->cur_p), start, machine->iter);
@@ -61,6 +106,7 @@ bool machine_match(Machine *machine, char *string) {
 void machine_free(Machine *m) {
     free(m->next);
     free(m->current);
+    sv_free(m->sv);
 }
 
 

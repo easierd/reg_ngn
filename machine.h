@@ -16,6 +16,21 @@ typedef struct State {
 } State;
 
 
+enum {
+    SV_DEF_CAPACITY=8,
+};
+
+typedef struct StateVector {
+    State **state;
+    size_t sz;
+    size_t capacity;
+} StateVector;
+
+StateVector *sv_new();
+void sv_push(StateVector*, State*);
+void sv_free(StateVector*);
+
+
 typedef struct Machine {
     State *start;
     State **current;
@@ -23,6 +38,7 @@ typedef struct Machine {
     State **next;
     size_t next_p;
     int iter;
+    StateVector *sv;
 } Machine;
 
 
@@ -34,6 +50,6 @@ extern State MATCH_STATE;
 
 State *state_new(int, State*, State*);
 
-void machine_init(Machine *machine, size_t n_states, State *start);
+void machine_init(Machine *machine, StateVector *sv, State *start);
 bool machine_match(Machine *machine, char *string);
 void machine_free(Machine *m);

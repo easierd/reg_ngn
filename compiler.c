@@ -15,29 +15,31 @@ void concat_last_two(FragStack *s) {
 }
 
 
-void alternate_last_two(FragStack *s) {
+void alternate_last_two(FragStack *s, StateVector *sv) {
     Fragment f1 = frag_stack_pop(s);
     Fragment f2 = frag_stack_pop(s);
-
     State *branch = state_new(BRANCH, f1.in, f2.in);
+    sv_push(sv, branch);
     f2.out = append(f1.out, f2.out);
     f2.in = branch;
     frag_stack_push(s, f2);
 }
 
 
-void optional_last(FragStack *s) {
+void optional_last(FragStack *s, StateVector *sv) {
     Fragment f = frag_stack_pop(s);
     State *branch = state_new(BRANCH, f.in, NULL);
+    sv_push(sv, branch);
     f.out = append(f.out, list(&(branch->next_2)));
     f.in = branch;
     frag_stack_push(s, f);
 }
 
 
-void kleene_last(FragStack *s) {
+void kleene_last(FragStack *s, StateVector *sv) {
     Fragment f = frag_stack_pop(s);
     State *branch = state_new(BRANCH, f.in, NULL);
+    sv_push(sv, branch);
     patch(f.out, branch);
     f.out = list(&(branch->next_2));
     f.in = branch;
@@ -45,19 +47,18 @@ void kleene_last(FragStack *s) {
 }
 
 
-void one_or_more_last(FragStack *s) {
+void one_or_more_last(FragStack *s, StateVector *sv) {
     Fragment f = frag_stack_pop(s);
     State *branch = state_new(BRANCH, f.in, NULL);
+    sv_push(sv, branch);
     patch(f.out, branch);
     f.out = list(&branch->next_2);
     frag_stack_push(s,f);
 }
 
 
-static State *compile(char *s, long *states) {
+static State *compile(char *s, StateVector *sv) {
     // match state is always present
-    *states = 1;
-
     if (!*s) {
         return &MATCH_STATE;
     }
@@ -89,7 +90,7 @@ static State *compile(char *s, long *states) {
                     concat_last_two(&stack);
                 }
                 while (g.alternations-- > 0) {
-                    alternate_last_two(&stack);
+                    alternate_last_two(&stack, sv);
                 }
                 g = group_stack_pop(&gstack);
                 g.primaries++;
@@ -106,21 +107,21 @@ static State *compile(char *s, long *states) {
                 if (g.primaries == 0) {
                     return NULL;
                 } 
-                optional_last(&stack); 
+                optional_last(&stack, sv); 
                 break;
 
             case '*':
                 if (g.primaries == 0) {
                     return NULL;
                 }
-                kleene_last(&stack);
+                kleene_last(&stack, sv);
                 break;
 
             case '+':
                 if (g.primaries == 0) {
                     return NULL;
                 }
-                one_or_more_last(&stack);
+                one_or_more_last(&stack, sv);
                 break;
 
             default:
@@ -136,7 +137,7 @@ static State *compile(char *s, long *states) {
                     perror("compile");
                     exit(EXIT_FAILURE);
                 }
-                (*states)++;
+                sv_push(sv, state);
 
                 Fragment f = fragment(state, list(&(state->next)));
                 frag_stack_push(&stack, f);
@@ -149,7 +150,7 @@ static State *compile(char *s, long *states) {
     }
 
     while (g.alternations-- > 0) {
-        alternate_last_two(&stack);
+        alternate_last_two(&stack, sv);
     }
 
     Fragment last = frag_stack_pop(&stack);
@@ -163,14 +164,14 @@ static State *compile(char *s, long *states) {
 
 
 Machine compile_pattern(char *s) {
-    long states = 0;
-    State *start = compile(s, &states);
+    StateVector *sv = sv_new();
+    State *start = compile(s, sv);
     if (start == NULL) {
         fprintf(stderr, "Bad regexp\n");
         exit(EXIT_FAILURE);
     }
     Machine m;
-    machine_init(&m, states, start);
+    machine_init(&m, sv, start);
 
     return m;
 }
