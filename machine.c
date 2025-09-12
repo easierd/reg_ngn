@@ -51,7 +51,7 @@ StateVector *sv_new() {
 
 void sv_push(StateVector *sv, State *s) {
     if (sv->capacity == sv->sz) {
-        sv->state = realloc(sv->state, sv->capacity * 2);
+        sv->state = realloc(sv->state, sv->capacity * 2 * sizeof(State*));
         sv->capacity *= 2;
     }
 
